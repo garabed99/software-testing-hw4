@@ -1,0 +1,559 @@
+{
+	"info": {
+		"_postman_id": "de0f7b9b-2394-4df9-b723-5986ec5c9d08",
+		"name": "r/SpaceX API V4",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Capsules",
+			"item": [
+				{
+					"name": "Get all capsules",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check status is 200\", () => {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check serial of first capsule\", () => {\r",
+									"    pm.expect(jsonData[0].serial).to.eql(\"C101\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Not all capsules have launched yet\", () => {\r",
+									"    let result = true\r",
+									"    for(let i = 0; i < jsonData.length; i++) {\r",
+									"        if(jsonData[i].launches.length == 0) {\r",
+									"            result = false\r",
+									"            break\r",
+									"        }\r",
+									"    }\r",
+									"    pm.expect(result).to.be.false\r",
+									"})\r",
+									"\r",
+									"\r",
+									"const activeCapsules = jsonData.filter(el => el.status.localeCompare(\"active\") == 0)\r",
+									"pm.collectionVariables.set(\"activeCapsuleID\", activeCapsules[0].id);\r",
+									"pm.collectionVariables.set(\"firstActiveCapsuleFirstLaunch\", activeCapsules[0].launches[0]);\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/capsules",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"capsules"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get one VALID capsule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check status is 200\", () => {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check if capsule has launched\", () => {\r",
+									"    pm.expect(jsonData.launches.length).to.be.above(0)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check if capsule is active\", () => {\r",
+									"    pm.expect(jsonData.status).to.be.eql(\"active\")\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/capsules/{{capsuleID}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"capsules",
+								"{{capsuleID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get one INVALID capsule",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.text();\r",
+									"\r",
+									"pm.test(\"Check status is 404\", () => {\r",
+									"    pm.response.to.have.status(404)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Capsule Not Found\", () => {\r",
+									"    pm.expect(jsonData).to.eql(\"Not Found\")\r",
+									"})\r",
+									"\r",
+									"\r",
+									"pm.test(\"Check if Capsule has launched\", () => {\r",
+									"    pm.expect(jsonData.launches).to.eql(undefined)\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/capsules/{{invalidCapsuleID}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"capsules",
+								"{{invalidCapsuleID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Crew",
+			"item": [
+				{
+					"name": "Get all Crew",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check status is 200\", () => {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check first crew person's name\", () => {\r",
+									"    pm.expect(jsonData[0].name).to.eql(\"Robert Behnken\");\r",
+									"});\r",
+									"\r",
+									"let launch = pm.collectionVariables.get(\"launchID\");\r",
+									"pm.test(\"Check launch that person took part of\", () => {\r",
+									"    pm.expect(jsonData[0].launches[0]).to.eql(launch)\r",
+									"})\r",
+									"\r",
+									"pm.collectionVariables.set(\"crewID\", jsonData[0].id);\r",
+									"console.log(jsonData[0].id);\r",
+									"\r",
+									"pm.test(\"Check Crew member Shane Kimbrough exists\", () => {\r",
+									"    let result = false\r",
+									"    for(let i = 0; i < jsonData.length; i++) {\r",
+									"        if(jsonData[i].name == \"Shane Kimbrough\") {\r",
+									"            result = true\r",
+									"            break\r",
+									"        }\r",
+									"    }\r",
+									"    pm.expect(result).to.be.true\r",
+									"});\r",
+									"\r",
+									"//works only in runner with CSV\r",
+									"pm.test(\"Check Crew member from the CSV exists\", () => {\r",
+									"    let result = false\r",
+									"    for(let i = 0; i < jsonData.length; i++) {\r",
+									"        if(jsonData[i].name == data.name) {\r",
+									"            result = true\r",
+									"            break\r",
+									"        }\r",
+									"    }\r",
+									"    pm.expect(result).to.be.true\r",
+									"});\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/crew?name={{name}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"crew"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "{{name}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get one VALID Crew Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check status is 200\", () => {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check if crew is active\", () => {\r",
+									"    pm.expect(jsonData.status).to.eql(\"active\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"const launchParticipated = pm.collectionVariables.get(\"launchwithcrew\");\r",
+									"pm.test(\"Check if the crew took part in certain launch\", () => {\r",
+									"    pm.expect(jsonData.launches[0]).to.eql(launchParticipated)\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/crew/{{crewID}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"crew",
+								"{{crewID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Launches",
+			"item": [
+				{
+					"name": "Get one VALID Launch",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();\r",
+									"const crew = pm.collectionVariables.get(\"crewID\");\r",
+									"\r",
+									"pm.test(\"Check status is 200\", () => {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check if launch had the crew member\", () => {\r",
+									"    pm.expect(jsonData.crew[0]).to.eql(crew);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Check if this launch ever failed\", () => {\r",
+									"    pm.expect(jsonData.failures.length == 0).to.be.true\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/launches/{{launchID}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"launches",
+								"{{launchID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Launchpads",
+			"item": [
+				{
+					"name": "Get all Launchpads",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Check status is 200\", () => {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check if there some launchpads never had launches\", () => {\r",
+									"    let result = false\r",
+									"    for(let i =0 ; i < jsonData.length; i++) {\r",
+									"        if(jsonData[i].launches.length == 0) {\r",
+									"            result = true;\r",
+									"            break;\r",
+									"        }\r",
+									"    }\r",
+									"    pm.expect(result).to.be.true\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check number of launchpads without launches is 2\", () => {\r",
+									"    let result = 0\r",
+									"        for(let i =0 ; i < jsonData.length; i++) {\r",
+									"        if(jsonData[i].launches.length == 0) {\r",
+									"            result +=1;\r",
+									"        }\r",
+									"    }\r",
+									"    pm.expect(result).to.be.eql(2)\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/launchpads",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"launchpads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get one VALID Launchpad",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.json();\r",
+									"const launchesFromThisPad = jsonData.launches;\r",
+									"const launchID = pm.collectionVariables.get(\"launchID\");\r",
+									"\r",
+									"pm.test(\"Check status is 200\", () => {\r",
+									"    pm.response.to.have.status(200)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Launchpad that has a launch with crew\", () => {\r",
+									"    let result = false\r",
+									"    for(let i =0 ; i < launchesFromThisPad.length; i++) {\r",
+									"        if(launchesFromThisPad[i] == launchID) {\r",
+									"            result = true;\r",
+									"            break;\r",
+									"        }\r",
+									"    }\r",
+									"    pm.expect(result).to.be.true\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check this launchpad is active\", () => {\r",
+									"    pm.expect(jsonData.status).to.eql(\"active\")\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/launchpads/{{launchpadID}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"launchpads",
+								"{{launchpadID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Launchpad",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const jsonData = pm.response.text();\r",
+									"\r",
+									"pm.test(\"Check status is 401\", ()=> {\r",
+									"    pm.response.to.have.status(401)\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Youtube link\", () => {\r",
+									"    pm.expect(jsonData).contains(\"youtu\")\r",
+									"})\r",
+									"\r",
+									"pm.test(\"Check if unable to perform delete request\", () => {\r",
+									"    pm.expect(jsonData.id).to.eql(undefined)\r",
+									"})\r",
+									"\r",
+									"\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/v4/launchpads/{{launchpadID}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"v4",
+								"launchpads",
+								"{{launchpadID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "crewID",
+			"value": ""
+		},
+		{
+			"key": "launchID",
+			"value": ""
+		},
+		{
+			"key": "capsuleID",
+			"value": " "
+		},
+		{
+			"key": "launchpadID",
+			"value": ""
+		},
+		{
+			"key": "invalidLaunchID",
+			"value": ""
+		},
+		{
+			"key": "invalidCapsuleID",
+			"value": ""
+		},
+		{
+			"key": "launchwithcrew",
+			"value": ""
+		},
+		{
+			"key": "activeCapsuleID",
+			"value": ""
+		},
+		{
+			"key": "firstActiveCapsuleFirstLaunch",
+			"value": ""
+		}
+	]
+}
